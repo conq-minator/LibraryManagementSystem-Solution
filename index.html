@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IEM Library &mdash; Management System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <i data-lucide="library"></i>
+        <div><h1>IEM Library</h1><span>Management System</span></div>
+      </div>
+      <nav style="display:flex; flex-direction:column; gap:4px;">
+        <a class="nav-link active" id="nav-dashboard" onclick="showSection('dashboard')"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+        <a class="nav-link" id="nav-books" onclick="showSection('books')"><i data-lucide="book-open"></i> All Books <span class="nav-badge" id="cartCountBadge">0</span></a>
+        <a class="nav-link" id="nav-addBook" onclick="showSection('addBook')"><i data-lucide="plus-circle"></i> Add Book</a>
+        <a class="nav-link" id="nav-search" onclick="showSection('search')"><i data-lucide="search"></i> Search</a>
+        <a class="nav-link" id="nav-issue" onclick="showSection('issue')"><i data-lucide="arrow-up-right"></i> Issue Book</a>
+        <a class="nav-link" id="nav-return" onclick="showSection('return')"><i data-lucide="arrow-down-left"></i> Return Book</a>
+        <a class="nav-link" id="nav-issued" onclick="showSection('issued')"><i data-lucide="bookmark"></i> Issued Books</a>
+        <a class="nav-link" id="nav-history" onclick="showSection('history')"><i data-lucide="history"></i> History</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <div id="alert" class="alert"></div>
+
+      <!-- Dashboard -->
+      <section id="dashboard" class="view active">
+        <div class="header"><h2>IEM Library Dashboard</h2><p>Overview of academic inventory and circulation</p></div>
+        <div class="grid">
+          <div class="card"><div><span>Total Titles</span><strong id="statTitles">0</strong></div><i data-lucide="book"></i></div>
+          <div class="card"><div><span>Available Copies</span><strong id="statCopies">0</strong></div><i data-lucide="copy"></i></div>
+          <div class="card"><div><span>Active Issues</span><strong id="statActive">0</strong></div><i data-lucide="clock"></i></div>
+          <div class="card"><div><span>Returned</span><strong id="statReturned">0</strong></div><i data-lucide="check-circle"></i></div>
+        </div>
+      </section>
+
+      <!-- All Books (Click to add to Cart & Checkout) -->
+      <section id="books" class="view">
+        <div class="header"><h2>Book Catalogue</h2><p>Click any volume to add it to your checkout cart</p></div>
+        <div id="cartBar" class="cart-bar" style="display:none;">
+          <span id="cartInfoText" style="font-weight:600;">0 books in cart</span>
+          <div class="cart-checkout-box">
+            <input type="text" id="cartStudentId" placeholder="Student ID (e.g. IEM-101)">
+            <button class="btn btn-gold btn-sm" onclick="checkoutCart()"><i data-lucide="shopping-cart"></i> Checkout All</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Book ID</th><th>Title</th><th>Author</th><th>Year</th><th>Status</th><th>Cart Action</th></tr></thead>
+            <tbody id="booksTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Add Book -->
+      <section id="addBook" class="view">
+        <div class="header"><h2>Add New Volume</h2><p>Inscribe a new book into the library catalogue</p></div>
+        <div class="form-panel">
+          <form id="addBookForm">
+            <div class="form-row">
+              <div class="form-group"><label>Book ID *</label><input type="text" id="bookId" placeholder="e.g. IEM-CS-105" required></div>
+              <div class="form-group"><label>Copies *</label><input type="number" id="bookCopies" min="0" max="10000" placeholder="e.g. 3" required></div>
+            </div>
+            <div class="form-group"><label>Title *</label><input type="text" id="bookTitle" placeholder="e.g. Algorithms & Data Structures" required></div>
+            <div class="form-row">
+              <div class="form-group"><label>Author *</label><input type="text" id="bookAuthor" placeholder="e.g. Cormen & Leiserson" required></div>
+              <div class="form-group"><label>Year *</label><input type="number" id="bookYear" min="1" max="2026" placeholder="e.g. 2024" required></div>
+            </div>
+            <button type="submit" class="btn"><i data-lucide="plus"></i> Add Book</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Search Books -->
+      <section id="search" class="view">
+        <div class="header"><h2>Search Archives</h2><p>Find volumes by Book ID, Title, or Author</p></div>
+        <div style="max-width:400px; margin-bottom:14px;"><input type="text" id="searchQuery" placeholder="Search by ID, title, or author..." oninput="renderSearch()"></div>
+        <div class="table-wrap">
+          <table><thead><tr><th>Book ID</th><th>Title</th><th>Author</th><th>Year</th><th>Availability</th></tr></thead><tbody id="searchResultsBody"></tbody></table>
+        </div>
+      </section>
+
+      <!-- Issue Book -->
+      <section id="issue" class="view">
+        <div class="header"><h2>Issue Desk</h2><p>Loan a book directly to an enrolled student</p></div>
+        <div class="form-panel">
+          <form id="issueForm">
+            <div class="form-group"><label>Book ID *</label><input type="text" id="issueBookId" placeholder="e.g. IEM-CS-101" required></div>
+            <div class="form-group"><label>Student ID *</label><input type="text" id="issueStudentId" placeholder="e.g. IEM-2024-001" required></div>
+            <div class="form-group"><label>Due Date</label><input type="date" id="issueDueDate"></div>
+            <button type="submit" class="btn"><i data-lucide="check"></i> Issue Book</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Return Book -->
+      <section id="return" class="view">
+        <div class="header"><h2>Return Desk</h2><p>Process returned book and reinstate inventory</p></div>
+        <div class="form-panel">
+          <form id="returnForm">
+            <div class="form-group"><label>Book ID *</label><input type="text" id="returnBookId" placeholder="e.g. IEM-CS-101" required></div>
+            <div class="form-group"><label>Student ID *</label><input type="text" id="returnStudentId" placeholder="e.g. IEM-2024-001" required></div>
+            <button type="submit" class="btn"><i data-lucide="corner-down-left"></i> Return Book</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Currently Issued Books -->
+      <section id="issued" class="view">
+        <div class="header"><h2>Currently Issued Volumes</h2><p>Active borrowing records awaiting check-in</p></div>
+        <div class="table-wrap">
+          <table><thead><tr><th>#</th><th>Book ID</th><th>Title</th><th>Student ID</th><th>Issue &bull; Due</th><th>Action</th></tr></thead><tbody id="issuedTableBody"></tbody></table>
+        </div>
+      </section>
+
+      <!-- History -->
+      <section id="history" class="view">
+        <div class="header"><h2>Circulation History</h2><p>Archival register of completed returns</p></div>
+        <div class="table-wrap">
+          <table><thead><tr><th>#</th><th>Book ID</th><th>Title</th><th>Student ID</th><th>Period Details</th></tr></thead><tbody id="historyTableBody"></tbody></table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="backend/api.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
